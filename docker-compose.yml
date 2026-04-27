@@ -1,0 +1,51 @@
+services:
+  hmcts-postgres:
+    mem_limit: 1024m
+    mem_reservation: 512m
+    cpus: '1.0'
+    image: postgres:16-alpine
+    container_name: hmcts-postgres-local
+    environment:
+      POSTGRES_DB: taskmanager
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d taskmanager"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  hmcts-task-manager:
+    mem_limit: 3072m
+    mem_reservation: 1536m
+    cpus: '2.0'
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hmcts-task-manager-local
+    depends_on:
+      hmcts-postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: hmcts-postgres
+      DB_PORT: 5432
+      DB_NAME: taskmanager
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      SERVER_PORT: 8787
+      CORS_ORIGINS: http://localhost:3003
+    ports:
+      - "8787:8787"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8787/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  postgres_data:
