@@ -3,7 +3,6 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    // Flyway Gradle plugin database support
     classpath "org.flywaydb:flyway-database-postgresql:11.8.2"
     classpath "org.postgresql:postgresql:42.7.5"
   }
@@ -17,9 +16,8 @@ plugins {
   id 'org.flywaydb.flyway' version '11.8.2'
 }
 
-group = 'com.secura'
+group = 'uk.gov.hmcts'
 version = '1.0.0'
-description = 'Enterprise Task Manager API'
 
 java {
   toolchain {
@@ -27,6 +25,9 @@ java {
   }
 }
 
+/* ─────────────────────────────────────────────
+   Versions
+───────────────────────────────────────────── */
 ext {
   mapstructVersion = '1.6.3'
   lombokVersion = '1.18.44'
@@ -36,13 +37,18 @@ ext {
   springdocVersion = '2.8.3'
   jacocoVersion = '0.8.12'
   postgresqlVersion = '42.7.5'
-  flywayVersion = '11.8.2'
 }
 
+/* ─────────────────────────────────────────────
+   Repositories
+───────────────────────────────────────────── */
 repositories {
   mavenCentral()
 }
 
+/* ─────────────────────────────────────────────
+   Configurations
+───────────────────────────────────────────── */
 configurations {
   compileOnly {
     extendsFrom annotationProcessor
@@ -50,52 +56,45 @@ configurations {
 
   integrationTestImplementation.extendsFrom testImplementation
   integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
-
-  flywayMigration
 }
 
+/* ─────────────────────────────────────────────
+   Dependencies
+───────────────────────────────────────────── */
 dependencies {
 
-  // ── Core ─────────────────────────────────────────────────────────────
+  // Spring Boot Core
   implementation 'org.springframework.boot:spring-boot-starter-web'
   implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
   implementation 'org.springframework.boot:spring-boot-starter-validation'
   implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
-  // ── Database ─────────────────────────────────────────────────────────
+  // Database
   runtimeOnly "org.postgresql:postgresql:${postgresqlVersion}"
+  testRuntimeOnly 'com.h2database:h2'
 
-  // ── Flyway (Spring Boot runtime) ─────────────────────────────────────
+  // Flyway
   implementation 'org.flywaydb:flyway-core'
   implementation 'org.flywaydb:flyway-database-postgresql'
 
-  // ── Flyway (Gradle plugin runtime) ───────────────────────────────────
-  flywayMigration "org.flywaydb:flyway-database-postgresql:${flywayVersion}"
-  flywayMigration "org.postgresql:postgresql:${postgresqlVersion}"
-
-  // ── MapStruct ────────────────────────────────────────────────────────
+  // MapStruct
   implementation "org.mapstruct:mapstruct:${mapstructVersion}"
 
-  // ── Lombok ───────────────────────────────────────────────────────────
+  // Lombok
   compileOnly "org.projectlombok:lombok:${lombokVersion}"
-
-  // Main annotation processors (FIXED for Lombok + MapStruct)
   annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
   annotationProcessor "org.projectlombok:lombok-mapstruct-binding:${lombokMapstructBindingVersion}"
   annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
 
-  // Test compile-time
   testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
-
-  // Test annotation processors
   testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
   testAnnotationProcessor "org.projectlombok:lombok-mapstruct-binding:${lombokMapstructBindingVersion}"
   testAnnotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
 
-  // ── OpenAPI ──────────────────────────────────────────────────────────
+  // OpenAPI
   implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
 
-  // ── Test ─────────────────────────────────────────────────────────────
+  // Testing
   testImplementation 'org.springframework.boot:spring-boot-starter-test'
   testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
   testImplementation "org.testcontainers:postgresql:${testcontainersVersion}"
@@ -103,10 +102,9 @@ dependencies {
   testImplementation "io.rest-assured:spring-mock-mvc:${restAssuredVersion}"
 }
 
-tasks.named('bootJar') {
-  archiveFileName = 'task-manager.jar'
-}
-
+/* ─────────────────────────────────────────────
+   Compile Options
+───────────────────────────────────────────── */
 tasks.withType(JavaCompile).configureEach {
   options.compilerArgs += [
     '-parameters',
@@ -115,6 +113,22 @@ tasks.withType(JavaCompile).configureEach {
   ]
 }
 
+/* ─────────────────────────────────────────────
+   SOURCE SETS (INTEGRATION)
+───────────────────────────────────────────── */
+sourceSets {
+  integrationTest {
+    java.srcDir file('src/integrationTest/java')
+    resources.srcDir file('src/integrationTest/resources')
+
+    compileClasspath += sourceSets.main.output + sourceSets.test.output
+    runtimeClasspath += output + compileClasspath
+  }
+}
+
+/* ─────────────────────────────────────────────
+   UNIT TESTS (DEFAULT)
+───────────────────────────────────────────── */
 tasks.named('test') {
   useJUnitPlatform()
 
@@ -127,35 +141,73 @@ tasks.named('test') {
   exclude '**/*ApiTest.class'
 }
 
-sourceSets {
-  integrationTest {
-    java.srcDir file('src/integrationTest/java')
-    resources.srcDir file('src/integrationTest/resources')
-    compileClasspath += sourceSets.main.output + sourceSets.test.output
-    runtimeClasspath += output + compileClasspath
+/* ─────────────────────────────────────────────
+   API TEST TASK
+───────────────────────────────────────────── */
+tasks.register('apiTest', Test) {
+  description = 'Runs API tests'
+  group = 'verification'
+
+  useJUnitPlatform {
+    includeTags 'api'
   }
+
+  testClassesDirs = sourceSets.test.output.classesDirs
+  classpath = sourceSets.test.runtimeClasspath
+
+  include '**/*ApiTest.class'
 }
 
+/* ─────────────────────────────────────────────
+   INTEGRATION TEST TASK
+───────────────────────────────────────────── */
 tasks.register('integrationTest', Test) {
-  description = 'Runs integration and API tests.'
+  description = 'Runs integration tests'
   group = 'verification'
+
+  useJUnitPlatform {
+    includeTags 'integration'
+  }
 
   testClassesDirs = sourceSets.integrationTest.output.classesDirs
   classpath = sourceSets.integrationTest.runtimeClasspath
 
-  useJUnitPlatform()
-
   include '**/*IT.class'
   include '**/*IntegrationTest.class'
-  include '**/*ApiTest.class'
 
   shouldRunAfter tasks.test
 }
 
-tasks.named('check') {
-  dependsOn tasks.integrationTest
+/* ─────────────────────────────────────────────
+   SMOKE TEST TASK
+───────────────────────────────────────────── */
+tasks.register('smokeTest', Test) {
+  description = 'Runs smoke tests'
+  group = 'verification'
+
+  useJUnitPlatform {
+    includeTags 'smoke'
+  }
+
+  testClassesDirs = sourceSets.test.output.classesDirs
+  classpath = sourceSets.test.runtimeClasspath
+
+  include '**/*SmokeTest.class'
 }
 
+/* ─────────────────────────────────────────────
+   CHECK TASK
+───────────────────────────────────────────── */
+tasks.named('check') {
+  dependsOn tasks.test
+  dependsOn tasks.apiTest
+  dependsOn tasks.integrationTest
+  dependsOn tasks.smokeTest
+}
+
+/* ─────────────────────────────────────────────
+   JACOCO
+───────────────────────────────────────────── */
 jacoco {
   toolVersion = jacocoVersion
 }
@@ -166,7 +218,6 @@ tasks.named('jacocoTestReport') {
   reports {
     xml.required = true
     html.required = true
-    csv.required = false
   }
 }
 
@@ -186,6 +237,9 @@ tasks.named('check') {
   dependsOn tasks.jacocoTestCoverageVerification
 }
 
+/* ─────────────────────────────────────────────
+   FLYWAY
+───────────────────────────────────────────── */
 flyway {
   url = 'jdbc:postgresql://localhost:5433/taskmanager'
   user = 'postgres'
@@ -195,24 +249,12 @@ flyway {
   cleanDisabled = false
   baselineOnMigrate = true
 
-  // Uses plugin runtime dependencies above
   configurations = ['flywayMigration']
 }
 
-tasks.register('unitTests', Test) {
-  description = 'Runs unit tests only'
-  group = 'verification'
-
-  useJUnitPlatform {
-    includeTags 'unit'
-  }
-}
-
-tasks.register('integrationTestsTagged', Test) {
-  description = 'Runs tagged integration tests only'
-  group = 'verification'
-
-  useJUnitPlatform {
-    includeTags 'integration'
-  }
+/* ─────────────────────────────────────────────
+   JAR OUTPUT
+───────────────────────────────────────────── */
+tasks.named('bootJar') {
+  archiveFileName = 'task-manager.jar'
 }
