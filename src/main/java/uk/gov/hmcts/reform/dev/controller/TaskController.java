@@ -19,7 +19,7 @@ import uk.gov.hmcts.reform.dev.dto.response.ApiResponse;
 import uk.gov.hmcts.reform.dev.dto.response.PagedResponse;
 import uk.gov.hmcts.reform.dev.dto.response.TaskResponse;
 import uk.gov.hmcts.reform.dev.entity.TaskStatus;
-import uk.gov.hmcts.reform.dev.service.TaskService;
+import uk.gov.hmcts.reform.dev.api.TaskService;
 
 import java.util.UUID;
 

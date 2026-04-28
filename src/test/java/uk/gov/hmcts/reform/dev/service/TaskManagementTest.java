@@ -16,7 +16,6 @@ import uk.gov.hmcts.reform.dev.entity.TaskStatus;
 import uk.gov.hmcts.reform.dev.exception.TaskNotFoundException;
 import uk.gov.hmcts.reform.dev.mapper.TaskMapper;
 import uk.gov.hmcts.reform.dev.repository.TaskRepository;
-import uk.gov.hmcts.reform.dev.service.impl.TaskServiceImpl;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -30,7 +29,7 @@ import static org.mockito.BDDMockito.*;
 @ExtendWith(MockitoExtension.class)
 @Tag("unit")
 @DisplayName("TaskService Unit Tests")
-class TaskServiceImplTest {
+class TaskManagementTest {
 
     @Mock
     TaskRepository taskRepository;
@@ -38,7 +37,7 @@ class TaskServiceImplTest {
     TaskMapper taskMapper;
 
     @InjectMocks
-    TaskServiceImpl taskService;
+    TaskManagement taskService;
 
     private UUID taskId;
     private Task task;

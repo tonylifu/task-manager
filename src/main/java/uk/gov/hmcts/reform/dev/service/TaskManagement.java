@@ -1,4 +1,4 @@
-package uk.gov.hmcts.reform.dev.service.impl;
+package uk.gov.hmcts.reform.dev.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uk.gov.hmcts.reform.dev.api.TaskService;
 import uk.gov.hmcts.reform.dev.dto.request.CreateTaskRequest;
 import uk.gov.hmcts.reform.dev.dto.request.UpdateTaskRequest;
 import uk.gov.hmcts.reform.dev.dto.request.UpdateTaskStatusRequest;
@@ -17,7 +18,6 @@ import uk.gov.hmcts.reform.dev.entity.TaskStatus;
 import uk.gov.hmcts.reform.dev.exception.TaskNotFoundException;
 import uk.gov.hmcts.reform.dev.mapper.TaskMapper;
 import uk.gov.hmcts.reform.dev.repository.TaskRepository;
-import uk.gov.hmcts.reform.dev.service.TaskService;
 import uk.gov.hmcts.reform.dev.specification.TaskSpecification;
 
 import java.util.UUID;
@@ -26,7 +26,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional(readOnly = true)
-public class TaskServiceImpl implements TaskService {
+public class TaskManagement implements TaskService {
 
     private final TaskRepository taskRepository;
     private final TaskMapper taskMapper;

@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.hmcts.reform.dev.controller.TaskController;
 import uk.gov.hmcts.reform.dev.repository.TaskRepository;
-import uk.gov.hmcts.reform.dev.service.TaskService;
+import uk.gov.hmcts.reform.dev.api.TaskService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

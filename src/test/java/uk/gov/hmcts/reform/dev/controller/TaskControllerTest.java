@@ -18,7 +18,7 @@ import uk.gov.hmcts.reform.dev.dto.response.TaskResponse;
 import uk.gov.hmcts.reform.dev.entity.TaskStatus;
 import uk.gov.hmcts.reform.dev.exception.GlobalExceptionHandler;
 import uk.gov.hmcts.reform.dev.exception.TaskNotFoundException;
-import uk.gov.hmcts.reform.dev.service.TaskService;
+import uk.gov.hmcts.reform.dev.api.TaskService;
 
 import java.time.OffsetDateTime;
 import java.util.List;

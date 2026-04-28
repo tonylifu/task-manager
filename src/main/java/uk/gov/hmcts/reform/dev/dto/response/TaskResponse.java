@@ -3,6 +3,7 @@ package uk.gov.hmcts.reform.dev.dto.response;
 import io.swagger.v3.oas.annotations.media.Schema;
 import uk.gov.hmcts.reform.dev.entity.TaskStatus;
 
+import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -32,4 +33,4 @@ public record TaskResponse(
 
         @Schema(description = "Optimistic locking version")
         Long version
-) {}
+) implements Serializable {}

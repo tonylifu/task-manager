@@ -1,4 +1,4 @@
-package uk.gov.hmcts.reform.dev.service;
+package uk.gov.hmcts.reform.dev.api;
 
 import org.springframework.data.domain.Pageable;
 import uk.gov.hmcts.reform.dev.dto.request.CreateTaskRequest;
