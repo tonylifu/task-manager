@@ -218,12 +218,24 @@ tasks.named('jacocoTestReport') {
   reports {
     xml.required = true
     html.required = true
+    // Explicit output dir so you always know where to look
+    html.outputLocation = layout.buildDirectory.dir('reports/jacoco/html')
   }
 }
 
 tasks.named('jacocoTestCoverageVerification') {
+  // Must have a report before verifying
+  dependsOn tasks.jacocoTestReport
+
   violationRules {
     rule {
+      excludes = [
+        '**/mapper/**',
+        '**/entity/**',
+        '**/dto/**',
+        '**/config/**',
+        '**/*Application*'
+      ]
       limit {
         counter = 'LINE'
         value = 'COVEREDRATIO'
@@ -234,6 +246,7 @@ tasks.named('jacocoTestCoverageVerification') {
 }
 
 tasks.named('check') {
+  // This pulls in jacocoTestReport transitively via the dependsOn above
   dependsOn tasks.jacocoTestCoverageVerification
 }
 

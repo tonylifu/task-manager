@@ -5,9 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.hmcts.reform.dev.entity.Task;
 import uk.gov.hmcts.reform.dev.entity.TaskStatus;
+import uk.gov.hmcts.reform.dev.specification.TaskSpecification;
 
 import java.time.OffsetDateTime;
 import java.util.Optional;
@@ -38,6 +40,7 @@ class TaskRepositoryTest {
                                             .description("A pending task")
                                             .status(TaskStatus.TODO)
                                             .dueDate(OffsetDateTime.now().plusDays(5))
+                                            .createdAt(OffsetDateTime.now())
                                             .build());
 
         savedDone = taskRepository.save(Task.builder()
@@ -45,11 +48,14 @@ class TaskRepositoryTest {
                                             .description("A completed task")
                                             .status(TaskStatus.DONE)
                                             .dueDate(OffsetDateTime.now().plusDays(1))
+                                            .createdAt(OffsetDateTime.now())
                                             .build());
 
         savedInProgress = taskRepository.save(Task.builder()
                                                   .title("In Progress Task")
                                                   .status(TaskStatus.IN_PROGRESS)
+                                                  .dueDate(OffsetDateTime.now().plusDays(1))
+                                                  .createdAt(OffsetDateTime.now())
                                                   .build());
 
         taskRepository.flush();
@@ -86,16 +92,22 @@ class TaskRepositoryTest {
 
         @Test
         void shouldReturnAllTasks() {
-            Page<Task> result = taskRepository.findByFilters(
-                null, null, PageRequest.of(0, 10));
+            Specification<Task> spec = Specification
+                .allOf(TaskSpecification.hasStatus(null))
+                .and(TaskSpecification.titleContains(null));
+            Page<Task> result = taskRepository.findAll(
+                spec, PageRequest.of(0, 10));
 
             assertThat(result.getTotalElements()).isEqualTo(3);
         }
 
         @Test
         void shouldFilterByStatus() {
-            Page<Task> result = taskRepository.findByFilters(
-                TaskStatus.TODO, null, PageRequest.of(0, 10));
+            Specification<Task> spec = Specification
+                .allOf(TaskSpecification.hasStatus(TaskStatus.TODO))
+                .and(TaskSpecification.titleContains(null));
+
+            Page<Task> result = taskRepository.findAll(spec, PageRequest.of(0, 10));
 
             assertThat(result.getContent()).hasSize(1);
             assertThat(result.getContent().get(0).getStatus()).isEqualTo(TaskStatus.TODO);
@@ -103,8 +115,11 @@ class TaskRepositoryTest {
 
         @Test
         void shouldFilterByTitlePartialMatch() {
-            Page<Task> result = taskRepository.findByFilters(
-                null, "todo", PageRequest.of(0, 10));
+            Specification<Task> spec = Specification
+                .allOf(TaskSpecification.hasStatus(null))
+                .and(TaskSpecification.titleContains("todo"));
+
+            Page<Task> result = taskRepository.findAll(spec, PageRequest.of(0, 10));
 
             assertThat(result.getContent()).hasSize(1);
         }
@@ -169,6 +184,8 @@ class TaskRepositoryTest {
                 .description("Full description")
                 .status(TaskStatus.TODO)
                 .dueDate(OffsetDateTime.now().plusDays(10))
+                .createdAt(OffsetDateTime.now())
+                .updatedAt(OffsetDateTime.now())
                 .build();
 
             Task saved = taskRepository.save(task);
