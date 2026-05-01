@@ -6,6 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import uk.gov.hmcts.reform.dev.dto.request.CreateTaskRequest;
 import uk.gov.hmcts.reform.dev.dto.request.UpdateTaskRequest;
 import uk.gov.hmcts.reform.dev.dto.request.UpdateTaskStatusRequest;
@@ -163,7 +164,7 @@ class TaskManagementTest {
             Pageable pageable = PageRequest.of(0, 20, Sort.by("createdAt").descending());
             Page<Task> taskPage = new PageImpl<>(List.of(task), pageable, 1);
 
-            given(taskRepository.findByFilters(null, null, pageable)).willReturn(taskPage);
+            given(taskRepository.findAll(any(Specification.class), eq(pageable))).willReturn(taskPage);
             given(taskMapper.toResponse(task)).willReturn(taskResponse);
 
             PagedResponse<TaskResponse> result = taskService.getAllTasks(null, null, pageable);
@@ -180,7 +181,7 @@ class TaskManagementTest {
             Pageable pageable = PageRequest.of(0, 20);
             Page<Task> emptyPage = Page.empty(pageable);
 
-            given(taskRepository.findByFilters(null, null, pageable)).willReturn(emptyPage);
+            given(taskRepository.findAll(any(Specification.class), eq(pageable))).willReturn(emptyPage);
 
             PagedResponse<TaskResponse> result = taskService.getAllTasks(null, null, pageable);
 
@@ -194,15 +195,14 @@ class TaskManagementTest {
             Pageable pageable = PageRequest.of(0, 20);
             Page<Task> taskPage = new PageImpl<>(List.of(task));
 
-            given(taskRepository.findByFilters(TaskStatus.TODO, null, pageable))
-                    .willReturn(taskPage);
+            given(taskRepository.findAll(any(Specification.class), eq(pageable))).willReturn(taskPage);
             given(taskMapper.toResponse(task)).willReturn(taskResponse);
 
             PagedResponse<TaskResponse> result =
                     taskService.getAllTasks(TaskStatus.TODO, null, pageable);
 
             assertThat(result.content()).hasSize(1);
-            then(taskRepository).should().findByFilters(TaskStatus.TODO, null, pageable);
+            then(taskRepository).should().findAll(any(Specification.class), eq(pageable));
         }
     }
 

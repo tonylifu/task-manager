@@ -52,7 +52,6 @@ public class TaskManagement implements TaskService {
     @Override
     public PagedResponse<TaskResponse> getAllTasks(TaskStatus status, String title, Pageable pageable) {
         log.debug("Fetching all tasks - status: {}, title: {}, page: {}", status, title, pageable.getPageNumber());
-//        Page<Task> tasks = taskRepository.findByFilters(status, title, pageable);
         Specification<Task> spec = Specification
                 .allOf(TaskSpecification.hasStatus(status))
                 .and(TaskSpecification.titleContains(title));
