@@ -233,7 +233,35 @@ JaCoCo enforces **80% line coverage** at build time. The following packages are 
 
 ## Project Structure
 
-![img_1.png](img_1.png)
+```
+hmcts-dev-test-backend/
+├── build.gradle                        # Gradle build — versions, tasks, JaCoCo, Flyway
+├── docker-compose.yml                  # App + PostgreSQL services
+├── Dockerfile                          # Multi-stage Eclipse Temurin 21 build
+├── .env                                # Local env defaults
+└── src/
+├── main/java/uk/gov/hmcts/reform/dev/
+│   ├── api/                        # TaskService interface
+│   ├── config/                     # Spring configuration beans (CORS, OpenAPI, JPA auditing)
+│   ├── controller/                 # TaskController — REST endpoints
+│   ├── dto/
+│   │   ├── request/                # CreateTaskRequest, UpdateTaskRequest, UpdateTaskStatusRequest
+│   │   └── response/               # TaskResponse, ApiResponse<T>, PagedResponse<T>
+│   ├── entity/                     # Task entity, TaskStatus enum
+│   ├── exception/                  # TaskNotFoundException, GlobalExceptionHandler
+│   ├── mapper/                     # TaskMapper (MapStruct)
+│   ├── repository/                 # TaskRepository (Spring Data JPA)
+│   └── service/                    # TaskManagement (service implementation)
+├── main/resources/
+│   ├── application.yml
+│   └── db/migration/
+│       ├── V1__create_tasks_table.sql   # Schema + indexes + constraints
+│       └── V2__seed_sample_data.sql     # Development seed data (5 tasks)
+├── test/java/...                   # Unit, controller, mapper, exception, smoke, API tests
+├── test/resources/
+│   └── application-test.yml
+└── integrationTest/java/...        # Testcontainers integration tests
+```
 
 ---
 
