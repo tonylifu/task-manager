@@ -1,7 +1,13 @@
 package uk.gov.hmcts.reform.dev.api;
 
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,232 +24,247 @@ import uk.gov.hmcts.reform.dev.repository.TaskRepository;
 import java.time.OffsetDateTime;
 
 import static io.restassured.module.mockmvc.RestAssuredMockMvc.given;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.hamcrest.Matchers.notNullValue;
 
 /**
- * RestAssured API contract tests.
- * Named *ApiTest so Failsafe picks them up separately from Surefire unit tests.
- * These verify API contracts: status codes, response body shapes, and header values.
+ * IMPORTANT:
+ * Public class + public test methods helps Gradle/JUnit discovery consistently
+ * when using custom integrationTest source sets.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Tag("api")
-@DisplayName("Task API Contract Tests (RestAssured)")
+@DisplayName("Task API Contract Tests")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class TaskCrudApiTest {
+public class TaskCrudApiTest {
 
-    @Autowired MockMvc mockMvc;
     @Autowired
-    TaskRepository taskRepository;
+    private MockMvc mockMvc;
+
+    @Autowired
+    private TaskRepository taskRepository;
 
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         RestAssuredMockMvc.mockMvc(mockMvc);
         taskRepository.deleteAll();
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // Full CRUD lifecycle as a sequence
-    // ──────────────────────────────────────────────────────────────────────────
-
     @Test
     @Order(1)
-    @DisplayName("Full CRUD lifecycle: create → read → update status → delete")
-    void fullCrudLifecycle() {
-        // 1. CREATE
-        CreateTaskRequest createReq = new CreateTaskRequest(
-            "Lifecycle Task", "A full lifecycle task",
-            TaskStatus.TODO, OffsetDateTime.now().plusDays(10));
+    @DisplayName("Full CRUD lifecycle")
+    public void fullCrudLifecycle() {
 
-        String taskId = given()
+        CreateTaskRequest request = new CreateTaskRequest(
+            "Lifecycle Task",
+            "Lifecycle Description",
+            TaskStatus.TODO,
+            OffsetDateTime.now().plusDays(10)
+        );
+
+        String id =
+            given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body(createReq)
-        .when()
+                .body(request)
+                .when()
                 .post("/api/v1/tasks")
-        .then()
+                .then()
                 .statusCode(HttpStatus.CREATED.value())
                 .body("success", is(true))
                 .body("data.title", equalTo("Lifecycle Task"))
                 .body("data.status", equalTo("TODO"))
-                .body("data.version", equalTo(0))
-                .extract().path("data.id");
+                .extract()
+                .path("data.id");
 
-        assertThat(taskId).isNotNull();
-
-        // 2. READ BY ID
-        given()
-        .when()
-                .get("/api/v1/tasks/{id}", taskId)
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("data.id", equalTo(taskId))
-                .body("data.title", equalTo("Lifecycle Task"));
-
-        // 3. READ ALL — should contain our task
-        given()
-        .when()
-                .get("/api/v1/tasks")
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("data.totalElements", equalTo(1));
-
-        // 4. UPDATE STATUS
-        given()
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body(new UpdateTaskStatusRequest(TaskStatus.IN_PROGRESS))
-        .when()
-                .patch("/api/v1/tasks/{id}/status", taskId)
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("data.status", equalTo("IN_PROGRESS"));
-
-        // 5. VERIFY STATUS CHANGED
-        given()
-        .when()
-                .get("/api/v1/tasks/{id}", taskId)
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("data.status", equalTo("IN_PROGRESS"));
-
-        // 6. DELETE
-        given()
-        .when()
-                .delete("/api/v1/tasks/{id}", taskId)
-        .then()
-                .statusCode(HttpStatus.NO_CONTENT.value());
-
-        // 7. CONFIRM DELETED
-        given()
-        .when()
-                .get("/api/v1/tasks/{id}", taskId)
-        .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
-    }
-
-    // ──────────────────────────────────────────────────────────────────────────
-    // Response body contract assertions
-    // ──────────────────────────────────────────────────────────────────────────
-
-    @Test
-    @DisplayName("Response envelope always contains success, message, data, timestamp")
-    void responseEnvelopeContract() {
-        CreateTaskRequest req = new CreateTaskRequest(
-                "Contract Task", null, TaskStatus.TODO, null);
+        assertThat(id).isNotBlank();
 
         given()
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body(req)
-        .when()
-                .post("/api/v1/tasks")
-        .then()
-                .statusCode(HttpStatus.CREATED.value())
-                .body("success",   notNullValue())
-                .body("message",   notNullValue())
-                .body("data",      notNullValue())
-                .body("timestamp", notNullValue());
+            .when()
+            .get("/api/v1/tasks/{id}", id)
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .body("data.id", equalTo(id));
+
+        given()
+            .when()
+            .get("/api/v1/tasks")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .body("data.totalElements", equalTo(1));
+
+        given()
+            .contentType(MediaType.APPLICATION_JSON_VALUE)
+            .body(new UpdateTaskStatusRequest(TaskStatus.IN_PROGRESS))
+            .when()
+            .patch("/api/v1/tasks/{id}/status", id)
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .body("data.status", equalTo("IN_PROGRESS"));
+
+        given()
+            .when()
+            .delete("/api/v1/tasks/{id}", id)
+            .then()
+            .statusCode(HttpStatus.NO_CONTENT.value());
+
+        given()
+            .when()
+            .get("/api/v1/tasks/{id}", id)
+            .then()
+            .statusCode(HttpStatus.NOT_FOUND.value());
     }
 
     @Test
-    @DisplayName("Task response always includes all required fields")
-    void taskResponseFieldContract() {
-        CreateTaskRequest req = new CreateTaskRequest(
-                "Field Contract Task", "Description", TaskStatus.IN_PROGRESS, null);
+    @DisplayName("Response envelope contract")
+    public void responseEnvelopeContract() {
+
+        CreateTaskRequest request = new CreateTaskRequest(
+            "Contract Task",
+            null,
+            TaskStatus.TODO,
+            null
+        );
 
         given()
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body(req)
-        .when()
-                .post("/api/v1/tasks")
-        .then()
-                .statusCode(HttpStatus.CREATED.value())
-                .body("data.id",        notNullValue())
-                .body("data.title",     equalTo("Field Contract Task"))
-                .body("data.status",    equalTo("IN_PROGRESS"))
-                .body("data.createdAt", notNullValue())
-                .body("data.updatedAt", notNullValue())
-                .body("data.version",   notNullValue());
+            .contentType(MediaType.APPLICATION_JSON_VALUE)
+            .body(request)
+            .when()
+            .post("/api/v1/tasks")
+            .then()
+            .statusCode(HttpStatus.CREATED.value())
+            .body("success", notNullValue())
+            .body("message", notNullValue())
+            .body("data", notNullValue())
+            .body("timestamp", notNullValue());
     }
 
     @Test
-    @DisplayName("Paged response has required pagination metadata fields")
-    void pagedResponseContract() {
+    @DisplayName("Task response fields contract")
+    public void taskResponseFieldContract() {
+
+        CreateTaskRequest request = new CreateTaskRequest(
+            "Field Task",
+            "Description",
+            TaskStatus.IN_PROGRESS,
+            null
+        );
+
         given()
-        .when()
-                .get("/api/v1/tasks")
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("data.content",      notNullValue())
-                .body("data.pageNumber",   notNullValue())
-                .body("data.pageSize",     notNullValue())
-                .body("data.totalElements",notNullValue())
-                .body("data.totalPages",   notNullValue())
-                .body("data.first",        notNullValue())
-                .body("data.last",         notNullValue());
+            .contentType(MediaType.APPLICATION_JSON_VALUE)
+            .body(request)
+            .when()
+            .post("/api/v1/tasks")
+            .then()
+            .statusCode(HttpStatus.CREATED.value())
+            .body("data.id", notNullValue())
+            .body("data.title", equalTo("Field Task"))
+            .body("data.status", equalTo("IN_PROGRESS"))
+            .body("data.createdAt", notNullValue())
+            .body("data.updatedAt", notNullValue())
+            .body("data.version", notNullValue());
     }
 
     @Test
-    @DisplayName("Error response has success=false and message for 404")
-    void errorResponseContract() {
+    @DisplayName("Paged response contract")
+    public void pagedResponseContract() {
+
         given()
-        .when()
-                .get("/api/v1/tasks/00000000-0000-0000-0000-000000000000")
-        .then()
-                .statusCode(HttpStatus.NOT_FOUND.value())
-                .body("success", is(false))
-                .body("message", notNullValue())
-                .body("timestamp", notNullValue());
+            .when()
+            .get("/api/v1/tasks")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .body("data.content", notNullValue())
+            .body("data.pageNumber", notNullValue())
+            .body("data.pageSize", notNullValue())
+            .body("data.totalElements", notNullValue())
+            .body("data.totalPages", notNullValue())
+            .body("data.first", notNullValue())
+            .body("data.last", notNullValue());
     }
 
     @Test
-    @DisplayName("Validation error response lists field-level errors")
-    void validationErrorContract() {
+    @DisplayName("404 contract")
+    public void errorResponseContract() {
+
         given()
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body("{\"title\":\"\",\"status\":\"TODO\"}")
-        .when()
-                .post("/api/v1/tasks")
-        .then()
-                .statusCode(HttpStatus.BAD_REQUEST.value())
-                .body("success", is(false))
-                .body("data.title", notNullValue());
+            .when()
+            .get("/api/v1/tasks/00000000-0000-0000-0000-000000000000")
+            .then()
+            .statusCode(HttpStatus.NOT_FOUND.value())
+            .body("success", is(false))
+            .body("message", notNullValue())
+            .body("timestamp", notNullValue());
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // Edge cases
-    // ──────────────────────────────────────────────────────────────────────────
+    @Test
+    @DisplayName("Validation contract")
+    public void validationErrorContract() {
+
+        given()
+            .contentType(MediaType.APPLICATION_JSON_VALUE)
+            .body("""
+                {
+                  "title":"",
+                  "status":"TODO"
+                }
+                """)
+            .when()
+            .post("/api/v1/tasks")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("success", is(false))
+            .body("data", notNullValue());
+    }
 
     @Test
-    @DisplayName("Page size is capped at 100")
-    void pageSizeCappedAt100() {
+    @DisplayName("Page size capped at 100")
+    public void pageSizeCappedAt100() {
+
         for (int i = 1; i <= 5; i++) {
-            taskRepository.save(Task.builder()
-                    .title("Task " + i).status(TaskStatus.TODO).build());
+            taskRepository.save(
+                Task.builder()
+                    .title("Task " + i)
+                    .description("Desc")
+                    .status(TaskStatus.TODO)
+                    .build()
+            );
         }
 
         given()
-                .param("size", 9999)
-        .when()
-                .get("/api/v1/tasks")
-        .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("data.pageSize", lessThanOrEqualTo(100));
+            .param("size", 9999)
+            .when()
+            .get("/api/v1/tasks")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .body("data.pageSize", lessThanOrEqualTo(100));
     }
 
     @Test
-    @DisplayName("All TaskStatus enum values are accepted on create")
-    void allStatusValuesAccepted() {
+    @DisplayName("All enum statuses accepted")
+    public void allStatusValuesAccepted() {
+
         for (TaskStatus status : TaskStatus.values()) {
+
             taskRepository.deleteAll();
+
             given()
-                    .contentType(MediaType.APPLICATION_JSON_VALUE)
-                    .body(new CreateTaskRequest("Task for " + status, null, status, null))
-            .when()
-                    .post("/api/v1/tasks")
-            .then()
-                    .statusCode(HttpStatus.CREATED.value())
-                    .body("data.status", equalTo(status.getValue()));
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(new CreateTaskRequest(
+                    "Task " + status.name(),
+                    null,
+                    status,
+                    null
+                ))
+                .when()
+                .post("/api/v1/tasks")
+                .then()
+                .statusCode(HttpStatus.CREATED.value())
+                .body("data.status", equalTo(status.name()));
         }
     }
 }

@@ -24,18 +24,6 @@ public interface TaskRepository extends JpaRepository<Task, UUID>, JpaSpecificat
     @Query("SELECT t FROM Task t WHERE " +
            "(:status IS NULL OR t.status = :status) AND " +
            "(:title IS NULL OR LOWER(t.title) LIKE LOWER(CONCAT('%', :title, '%')))")
-//@Query(value = """
-//        SELECT * FROM public.tasks t
-//        WHERE (:status IS NULL OR t.status = :status)
-//        AND (:title IS NULL OR LOWER(t.title) LIKE LOWER(CONCAT('%', CAST(:title AS text), '%')))
-//        ORDER BY t.created_at DESC
-//        """,
-//        countQuery = """
-//        SELECT COUNT(*) FROM public.tasks t
-//        WHERE (:status IS NULL OR t.status = CAST(:status AS text))
-//        AND (:title IS NULL OR LOWER(t.title) LIKE LOWER(CONCAT('%', CAST(:title AS text), '%')))
-//        """,
-//        nativeQuery = true)
     Page<Task> findByFilters(@Param("status") TaskStatus status,
                              @Param("title") String title,
                              Pageable pageable);

@@ -1,9 +1,11 @@
 package uk.gov.hmcts.reform.dev.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import java.util.UUID;
@@ -43,6 +45,23 @@ class GlobalExceptionHandlerTest {
                 new IllegalArgumentException("Bad input"));
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody().message()).isEqualTo("Bad input");
+    }
+
+    @Test
+    @DisplayName("Should return 400 for Constraint Violation")
+    void shouldHandle400ConstraintViolation() {
+        var response = handler.handleConstraintViolation(
+            new ConstraintViolationException(null));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    @DisplayName("Should return 400 for Http not readable")
+    void shouldHandle400HttpNotReadable() {
+        var response = handler.handleHttpMessageNotReadable(
+            new HttpMessageNotReadableException("Malformed JSON request or invalid enum value"));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().message()).isEqualTo("Malformed JSON request or invalid enum value");
     }
 
     @Test

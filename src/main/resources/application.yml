@@ -40,7 +40,7 @@ spring:
     default-property-inclusion: non_null
 
 server:
-  port: ${SERVER_PORT:8787}
+  port: ${SERVER_PORT:8080}
   error:
     include-message: always
     include-binding-errors: always
@@ -70,7 +70,7 @@ springdoc:
 
 app:
   cors:
-    allowed-origins: ${CORS_ORIGINS:http://localhost:3000}
+    allowed-origins: ${CORS_ORIGINS:http://localhost:8087}
 
 info:
   app:
