@@ -121,8 +121,7 @@ class TaskManagementTest {
         }
     }
 
-    // ─── GET BY ID ─────────────────────────────────────────────────────────────
-
+    //GET BY ID
     @Nested
     @DisplayName("getTaskById")
     class GetTaskById {
@@ -152,8 +151,7 @@ class TaskManagementTest {
         }
     }
 
-    // ─── GET ALL ───────────────────────────────────────────────────────────────
-
+    // GET ALL
     @Nested
     @DisplayName("getAllTasks")
     class GetAllTasks {
@@ -206,8 +204,7 @@ class TaskManagementTest {
         }
     }
 
-    // ─── UPDATE ────────────────────────────────────────────────────────────────
-
+    // UPDATE
     @Nested
     @DisplayName("updateTask")
     class UpdateTask {
@@ -244,8 +241,7 @@ class TaskManagementTest {
         }
     }
 
-    // ─── UPDATE STATUS ─────────────────────────────────────────────────────────
-
+    // UPDATE STATUS
     @Nested
     @DisplayName("updateTaskStatus")
     class UpdateTaskStatus {
@@ -280,8 +276,7 @@ class TaskManagementTest {
         }
     }
 
-    // ─── DELETE ────────────────────────────────────────────────────────────────
-
+    // DELETE
     @Nested
     @DisplayName("deleteTask")
     class DeleteTask {

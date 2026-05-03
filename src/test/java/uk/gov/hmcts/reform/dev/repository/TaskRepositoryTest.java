@@ -61,9 +61,7 @@ class TaskRepositoryTest {
         taskRepository.flush();
     }
 
-    // ─────────────────────────────────────────────
     // FIND BY ID
-    // ─────────────────────────────────────────────
     @Nested
     @DisplayName("findById")
     class FindById {
@@ -83,9 +81,7 @@ class TaskRepositoryTest {
         }
     }
 
-    // ─────────────────────────────────────────────
     // FILTERS
-    // ─────────────────────────────────────────────
     @Nested
     @DisplayName("findByFilters")
     class FindByFilters {
@@ -126,27 +122,35 @@ class TaskRepositoryTest {
 
         @Test
         void shouldFilterByCombinedFilters() {
-            Page<Task> result = taskRepository.findByFilters(
-                TaskStatus.TODO, "Todo", PageRequest.of(0, 10));
+            Specification<Task> spec = Specification
+                .allOf(TaskSpecification.hasStatus(TaskStatus.TODO))
+                .and(TaskSpecification.titleContains("Todo"));
+
+            Page<Task> result = taskRepository.findAll(spec, PageRequest.of(0, 10));
 
             assertThat(result.getContent()).hasSize(1);
         }
 
         @Test
         void shouldReturnEmptyWhenNoMatch() {
-            Page<Task> result = taskRepository.findByFilters(
-                TaskStatus.CANCELLED, null, PageRequest.of(0, 10));
+            Specification<Task> spec = Specification
+                .allOf(TaskSpecification.hasStatus(TaskStatus.CANCELLED))
+                .and(TaskSpecification.titleContains(null));
+
+            Page<Task> result = taskRepository.findAll(spec, PageRequest.of(0, 10));
 
             assertThat(result.getContent()).isEmpty();
         }
 
         @Test
         void shouldHonourPagination() {
-            Page<Task> page0 = taskRepository.findByFilters(
-                null, null, PageRequest.of(0, 2));
+            Specification<Task> spec = Specification
+                .allOf(TaskSpecification.hasStatus(null))
+                .and(TaskSpecification.titleContains(null));
 
-            Page<Task> page1 = taskRepository.findByFilters(
-                null, null, PageRequest.of(1, 2));
+            Page<Task> page0 = taskRepository.findAll(spec, PageRequest.of(0, 2));
+
+            Page<Task> page1 = taskRepository.findAll(spec, PageRequest.of(1, 2));
 
             assertThat(page0.getContent()).hasSize(2);
             assertThat(page1.getContent()).hasSize(1);
@@ -154,9 +158,7 @@ class TaskRepositoryTest {
         }
     }
 
-    // ─────────────────────────────────────────────
     // COUNT
-    // ─────────────────────────────────────────────
     @Nested
     @DisplayName("countByStatus")
     class CountByStatus {
@@ -170,9 +172,7 @@ class TaskRepositoryTest {
         }
     }
 
-    // ─────────────────────────────────────────────
     // SAVE / UPDATE
-    // ─────────────────────────────────────────────
     @Nested
     @DisplayName("save and update")
     class SaveAndUpdate {
@@ -216,9 +216,8 @@ class TaskRepositoryTest {
         }
     }
 
-    // ─────────────────────────────────────────────
+
     // DELETE
-    // ─────────────────────────────────────────────
     @Nested
     @DisplayName("delete")
     class Delete {

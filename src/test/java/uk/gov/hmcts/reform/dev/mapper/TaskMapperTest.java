@@ -26,9 +26,7 @@ class TaskMapperTest {
         mapper = new TaskMapperImpl();
     }
 
-    // ─────────────────────────────────────────────
     // toEntity
-    // ─────────────────────────────────────────────
     @Nested
     @DisplayName("toEntity(CreateTaskRequest)")
     class ToEntity {
@@ -93,9 +91,8 @@ class TaskMapperTest {
         }
     }
 
-    // ─────────────────────────────────────────────
+
     // toResponse
-    // ─────────────────────────────────────────────
     @Nested
     @DisplayName("toResponse(Task)")
     class ToResponse {
@@ -157,9 +154,8 @@ class TaskMapperTest {
         }
     }
 
-    // ─────────────────────────────────────────────
+
     // updateEntityFromRequest
-    // ─────────────────────────────────────────────
     @Nested
     @DisplayName("updateEntityFromRequest(UpdateTaskRequest, Task)")
     class UpdateEntityFromRequest {
