@@ -33,7 +33,7 @@ public class TaskManagement implements TaskService {
 
     @Override
     @Transactional
-    public TaskResponse createTask(CreateTaskRequest request) {
+    public TaskResponse createTask(final CreateTaskRequest request) {
         log.info("Creating task with title: {}", request.title());
         Task task = taskMapper.toEntity(request);
         Task saved = taskRepository.save(task);
@@ -42,7 +42,7 @@ public class TaskManagement implements TaskService {
     }
 
     @Override
-    public TaskResponse getTaskById(UUID id) {
+    public TaskResponse getTaskById(final UUID id) {
         log.debug("Fetching task with id: {}", id);
         return taskRepository.findById(id)
                 .map(taskMapper::toResponse)
@@ -50,7 +50,7 @@ public class TaskManagement implements TaskService {
     }
 
     @Override
-    public PagedResponse<TaskResponse> getAllTasks(TaskStatus status, String title, Pageable pageable) {
+    public PagedResponse<TaskResponse> getAllTasks(final TaskStatus status, final String title, final Pageable pageable) {
         log.debug("Fetching all tasks - status: {}, title: {}, page: {}", status, title, pageable.getPageNumber());
         Specification<Task> spec = Specification
                 .allOf(TaskSpecification.hasStatus(status))
@@ -62,7 +62,7 @@ public class TaskManagement implements TaskService {
 
     @Override
     @Transactional
-    public TaskResponse updateTask(UUID id, UpdateTaskRequest request) {
+    public TaskResponse updateTask(final UUID id, final UpdateTaskRequest request) {
         log.info("Updating task with id: {}", id);
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException(id));
@@ -74,7 +74,7 @@ public class TaskManagement implements TaskService {
 
     @Override
     @Transactional
-    public TaskResponse updateTaskStatus(UUID id, UpdateTaskStatusRequest request) {
+    public TaskResponse updateTaskStatus(final UUID id, final UpdateTaskStatusRequest request) {
         log.info("Updating status of task {} to {}", id, request.status());
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException(id));
@@ -85,7 +85,7 @@ public class TaskManagement implements TaskService {
 
     @Override
     @Transactional
-    public void deleteTask(UUID id) {
+    public void deleteTask(final UUID id) {
         log.info("Deleting task with id: {}", id);
         if (!taskRepository.existsById(id)) {
             throw new TaskNotFoundException(id);

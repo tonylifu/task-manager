@@ -8,9 +8,10 @@ import uk.gov.hmcts.reform.dev.dto.response.PagedResponse;
 import uk.gov.hmcts.reform.dev.dto.response.TaskResponse;
 import uk.gov.hmcts.reform.dev.entity.TaskStatus;
 
+import java.io.Serializable;
 import java.util.UUID;
 
-public interface TaskService {
+public interface TaskService extends Serializable {
 
     TaskResponse createTask(CreateTaskRequest request);
 
