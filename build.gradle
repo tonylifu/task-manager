@@ -129,6 +129,9 @@ sourceSets {
 /* ─────────────────────────────────────────────
    UNIT TESTS (DEFAULT)
 ───────────────────────────────────────────── */
+/* ─────────────────────────────────────────────
+   TEST LOGGING (shared config)
+───────────────────────────────────────────── */
 tasks.named('test') {
   useJUnitPlatform()
 
@@ -270,4 +273,19 @@ flyway {
 ───────────────────────────────────────────── */
 tasks.named('bootJar') {
   archiveFileName = 'task-manager.jar'
+}
+
+/* ─────────────────────────────────────────────
+   TEST LOGGING (shared config)
+───────────────────────────────────────────── */
+tasks.withType(Test).configureEach {
+  outputs.upToDateWhen { false }
+  testLogging {
+    events 'passed', 'failed', 'skipped'
+    exceptionFormat 'full'
+    showStandardStreams = false
+    showCauses = true
+    showExceptions = true
+    showStackTraces = true
+  }
 }
